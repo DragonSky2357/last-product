@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/src/account/screen/SignupScreen.dart';
 import 'package:frontend/src/account/state/AuthState.dart';
 import 'package:frontend/src/account/model/Login_model.dart';
@@ -55,6 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       TextFieldWidget(
                         label: 'Email',
+                        prefixIcon: Icons.account_circle_rounded,
                         hintText: '이메일을 입력하세요',
                         textEditingController: emailController,
                         textInputType: TextInputType.emailAddress,
@@ -64,6 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       TextFieldWidget(
                         label: 'Password',
+                        prefixIcon: Icons.lock_outline_sharp,
                         hintText: '비밀번호를 입력하세요',
                         obscureText: true,
                         textEditingController: passwordController,
@@ -162,8 +165,10 @@ class _LoginScreenState extends State<LoginScreen> {
         password: passwordController.text,
       );
 
+      logger.d('${dotenv.env['BASE_URL']}auth/user/login');
+
       Response response = await dio.post(
-          'http://10.0.2.2:3000/api/auth/user/login',
+          '${dotenv.env['BASE_URL']}/auth/user/login',
           data: createUser.toJson());
       int statusCode = response.data['statusCode'];
 
