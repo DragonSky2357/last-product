@@ -3,6 +3,7 @@ import 'package:frontend/src/account/widget/LoginWidget.dart';
 
 class TextFieldWidget extends StatefulWidget {
   final String label;
+  final IconData prefixIcon;
   final String hintText;
   final TextEditingController textEditingController;
   final bool obscureText;
@@ -11,6 +12,7 @@ class TextFieldWidget extends StatefulWidget {
   const TextFieldWidget(
       {super.key,
       required this.label,
+      required this.prefixIcon,
       required this.hintText,
       required this.textEditingController,
       this.obscureText = false,
@@ -37,6 +39,7 @@ class _TextFieldWidgetState extends State<TextFieldWidget> {
             controller: widget.textEditingController,
             obscureText: widget.obscureText,
             decoration: InputDecoration(
+              prefixIcon: Icon(widget.prefixIcon),
               filled: true,
               fillColor: Colors.grey[200],
               hintText: widget.hintText,
