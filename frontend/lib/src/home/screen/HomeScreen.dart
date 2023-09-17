@@ -1,10 +1,12 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/src/home/widget/categoryIconWidget.dart';
 import 'package:frontend/src/product/model/list_product_model.dart';
 import 'package:frontend/src/product/model/product_info_model.dart';
 import 'package:frontend/src/product/screen/ProductInfoScreen.dart';
+import 'package:frontend/src/search/screen/SearchScreen.dart';
 import 'package:logger/logger.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   var logger = Logger();
+  final TextEditingController searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -41,13 +44,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: BoxDecoration(
                           color: Colors.grey[300],
                           borderRadius: BorderRadius.circular(10)),
-                      child: Row(children: [
-                        IconButton(
-                          icon: const Icon(Icons.search),
-                          onPressed: () {},
-                        ),
-                        const Text('오늘의 메뉴는 한식 어떤가요?')
-                      ]),
+                      child: TextField(
+                        controller: searchController,
+                        onSubmitted: _handleSearchSubmit,
+                        decoration: const InputDecoration(
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: Colors.white,
+                            ),
+                            border: InputBorder.none,
+                            hintText: '오늘은 메뉴는 한식 어떨까요?',
+                            hintStyle:
+                                TextStyle(color: Colors.black, fontSize: 15)),
+                      ),
                     ),
                     const SizedBox(height: 30),
                   ],
@@ -95,12 +104,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                     children: [
                                       Row(
                                         children: [
-                                          ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(32.0),
-                                            child: Image.network(post.image!,
-                                                width: 40, height: 40),
-                                          ),
+                                          CircleAvatar(
+                                              radius: 25,
+                                              backgroundImage:
+                                                  NetworkImage(post.image!)),
                                           const SizedBox(width: 20),
                                           Text(post.storeName),
                                         ],
@@ -175,13 +182,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 20),
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 20),
                     const Text('Offers Near you',
                         style: TextStyle(fontSize: 20)),
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 20),
                     Container(
                       margin: const EdgeInsets.all(5),
                       child: FutureBuilder<List<ListProduct>?>(
@@ -197,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             List<ListProduct> posts = snapshot.data!;
 
                             return SizedBox(
-                              height: 300,
+                              height: 200,
                               child: ListView.builder(
                                 shrinkWrap: true,
                                 scrollDirection: Axis.horizontal,
@@ -208,6 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       postId: posts[index].id,
                                       storeId: posts[index].storeId,
                                       image: posts[index].image!,
+                                      title: posts[index].title,
                                       heroTag: index);
                                 },
                               ),
@@ -218,11 +225,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       ),
                     ),
+                  ],
+                ),
+                Container(decoration: const BoxDecoration(color: Colors.blue)),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     const Text('New & Trending',
                         style: TextStyle(fontSize: 20)),
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 20),
                     Container(
                       margin: const EdgeInsets.all(5),
                       child: FutureBuilder<List<ListProduct>?>(
@@ -238,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             List<ListProduct> posts = snapshot.data!;
 
                             return SizedBox(
-                              height: 300,
+                              height: 200,
                               child: ListView.builder(
                                 shrinkWrap: true,
                                 scrollDirection: Axis.horizontal,
@@ -249,6 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       postId: posts[index].id,
                                       storeId: posts[index].storeId,
                                       image: posts[index].image!,
+                                      title: posts[index].title,
                                       heroTag: index);
                                 },
                               ),
@@ -275,6 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
     image,
     postId,
     storeId,
+    title,
     heroTag,
   }) {
     return GestureDetector(
@@ -286,16 +299,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     postId: postId, storeId: storeId, heroTag: heroTag)));
       },
       child: AspectRatio(
-        aspectRatio: 5 / 6,
+        aspectRatio: 4 / 5,
         child: Container(
           margin: const EdgeInsets.only(right: 20),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20.0),
+            borderRadius: BorderRadius.circular(10.0),
           ),
-          child: Center(
-            child: Image.network(
-              image,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Image.network(
+                image,
+              ),
+              const SizedBox(height: 5),
+              Text('$title')
+            ],
           ),
         ),
       ),
@@ -306,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final Dio dio = Dio();
     try {
       final response = await dio
-          .get('http://10.0.2.2:3000/api/post?orderBy=created_at&order=DESC');
+          .get('${dotenv.env['BASE_URL']}/post?orderBy=created_at&order=DESC');
 
       if (response.statusCode == 200) {
         final List<dynamic> posts = response.data['data'];
@@ -327,7 +345,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final Dio dio = Dio();
     try {
       final response = await dio
-          .get('http://10.0.2.2:3000/api/post?orderBy=created_at&order=DESC');
+          .get('${dotenv.env['BASE_URL']}/post?orderBy=created_at&order=DESC');
 
       if (response.statusCode == 200) {
         final List<dynamic> posts = response.data['data'];
@@ -342,5 +360,10 @@ class _HomeScreenState extends State<HomeScreen> {
       print('오류 발생: $e');
     }
     return null;
+  }
+
+  void _handleSearchSubmit(String searchText) {
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => SearchScreen(searchText)));
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/src/account/state/AuthState.dart';
 import 'package:frontend/src/account/widget/TextFieldWidget.dart';
 import 'package:frontend/src/product/model/product_info_model.dart';
@@ -35,6 +36,7 @@ class _ProductInfoScreenState extends State<ProductInfoScreen> {
   late EdgeInsets safeArea;
   double drawerHeight = 0;
   bool a = false;
+  DateFormat dateFormat = DateFormat();
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController nicknameController = TextEditingController();
@@ -79,12 +81,13 @@ class _ProductInfoScreenState extends State<ProductInfoScreen> {
 
             return SlidingUpPanel(
               minHeight: 45,
-              maxHeight: 600,
+              maxHeight: 800,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(10),
                 topRight: Radius.circular(10),
               ),
               collapsed: const Center(child: Text('가게 정보')),
+              color: Colors.white,
               panel: Container(
                 margin: const EdgeInsets.all(10),
                 child: Column(
@@ -92,9 +95,131 @@ class _ProductInfoScreenState extends State<ProductInfoScreen> {
                     const SizedBox(
                       height: 40,
                     ),
-                    Text('상호명: ${store.storeName}'),
-                    Text('주소: ${store.address}'),
-                    const Text('전화번호: 010-1111-222'),
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          height: 200,
+                          decoration: BoxDecoration(
+                              border: Border.all(
+                                width: 1,
+                                color: Colors.black,
+                              ),
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(10)),
+                              image: const DecorationImage(
+                                  fit: BoxFit.cover,
+                                  image: NetworkImage(
+                                      'https://www.paris.co.kr/wp-content/uploads/2019/11/%E1%84%8F%E1%85%A1%E1%84%91%E1%85%A6%E1%84%8C%E1%85%A5%E1%86%AB%E1%84%80%E1%85%A7%E1%86%BC.jpg'))),
+                        ),
+                        Positioned(
+                          left: MediaQuery.of(context).size.width / 2 - 100,
+                          bottom: -30,
+                          child: Container(
+                            width: 200,
+                            height: 90,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(
+                                width: 1,
+                                color: Colors.black,
+                              ),
+                            ),
+                            child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    store.storeName,
+                                    style: const TextStyle(
+                                        fontSize: 25,
+                                        fontWeight: FontWeight.w300),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(store.description),
+                                ]),
+                          ),
+                        )
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 60,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.location_on),
+                        Text(store.address),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 40,
+                    ),
+                    Container(
+                      height: 1.0,
+                      width: double.infinity,
+                      color: Colors.black,
+                    ),
+                    Container(
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    const Text('매일'),
+                                    Text(
+                                      DateFormat('aa hh:mm', 'ko').format(
+                                          DateTime.parse(
+                                              store.openTime.toString())),
+                                    ),
+                                    const Text('~'),
+                                    Text(
+                                      DateFormat('aa hh:mm', 'ko').format(
+                                          DateTime.parse(
+                                              store.closeTime.toString())),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    const Text('브레이크 타임'),
+                                    Text(
+                                      DateFormat('aa hh:mm', 'ko').format(
+                                          DateTime.parse(
+                                              store.startBreakTime.toString())),
+                                    ),
+                                    const Text('~'),
+                                    Text(
+                                      DateFormat('aa hh:mm', 'ko').format(
+                                          DateTime.parse(
+                                              store.endBreakTime.toString())),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            Column(
+                              children: [
+                                IconButton(
+                                  onPressed: () {},
+                                  icon: const Icon(Icons.call),
+                                ),
+                                const Text('전화')
+                              ],
+                            ),
+                            Column(
+                              children: [
+                                IconButton(
+                                  onPressed: () {},
+                                  icon: const Icon(Icons.location_on),
+                                ),
+                                const Text('위치')
+                              ],
+                            )
+                          ]),
+                    ),
                     SizedBox(
                       width: 400,
                       height: 300,
@@ -407,7 +532,7 @@ class _ProductInfoScreenState extends State<ProductInfoScreen> {
     try {
       String postId = widget.postId;
 
-      final response = await dio.get('http://10.0.2.2:3000/api/post/$postId');
+      final response = await dio.get('${dotenv.env['BASE_URL']}/post/$postId');
 
       if (response.statusCode == 200) {
         final dynamic product = response.data['data'];
