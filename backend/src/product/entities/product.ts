@@ -42,7 +42,10 @@ export class Product {
   @DeleteDateColumn()
   deletedAt: Date | null;
 
-  @OneToOne(() => Post, (post) => post.product)
+  @OneToOne(() => Post, (post) => post.product, {
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
+  })
   post: Post;
 
   @ManyToOne(() => Store, (store) => store.product)
