@@ -16,6 +16,7 @@ import { Request } from 'express';
 export class PostService {
   constructor(
     @InjectRepository(Post) private postRepository: Repository<Post>,
+
     private readonly entityManager: EntityManager,
     private authService: AuthService,
     private productService: ProductService,
@@ -116,12 +117,13 @@ export class PostService {
   async findPostByTitle(
     postTitle: string,
   ): Promise<SuccessStatus<Post[]> | FailedStatus> {
-    console.log(postTitle);
     const findPosts = await this.postRepository
       .createQueryBuilder('post')
+      .leftJoinAndSelect('post.product', 'product')
       .where('post.title like :title', { title: `%${postTitle}%` })
       .getMany();
 
+    console.log(findPosts);
     return {
       statusCode: HttpStatus.OK,
       data: findPosts,
@@ -181,28 +183,34 @@ export class PostService {
         };
       }
 
-      const findPost = await this.postRepository.findOne({
+      const post = await this.postRepository.findOne({
         where: { id: postId, owner: { id: owner.id } },
-        relations: ['product'],
+        relations: { product: true },
       });
 
-      if (!findPost) {
+      if (!post) {
         return {
           statusCode: HttpStatus.BAD_REQUEST,
           message: '존재 하지 않은 포스트입니다.',
         };
       }
 
-      const { title, description, ...product } = updatePostDto;
+      const { title, description } = updatePostDto;
 
-      await this.postRepository.update(
-        { id: postId },
-        { title, description, image: image.location },
-      );
-      await this.productService.update(findPost.product.id, product);
+      post.title = title;
+      post.description = description;
+
+      post.product.capacity = updatePostDto.product.capacity;
+      post.product.fixed_price = updatePostDto.product.fixed_price;
+      post.product.sale_price = updatePostDto.product.sale_price;
+      post.product.manufacture_date = updatePostDto.product.manufacture_date;
+      post.product.expiration_date = updatePostDto.product.expiration_date;
+
+      await this.entityManager.save(post);
 
       return { statusCode: HttpStatus.OK };
     } catch (e) {
+      console.log(e);
       return {
         statusCode: e.message,
       };
