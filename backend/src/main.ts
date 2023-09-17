@@ -3,6 +3,8 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as multer from 'multer';
 import { urlencoded } from 'express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { BaseAPIDocument } from './swagger.document';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -18,6 +20,10 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  const config = new BaseAPIDocument().initializeOptions();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
 
   await app.listen(3000);
 }
